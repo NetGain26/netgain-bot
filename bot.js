@@ -8,7 +8,6 @@ const {
   TELEGRAM_CHAT_ID,
   RPC_URL,
   NFT_CONTRACT,
-  MIN_ALERT_USDT = "100",
 } = process.env;
 
 if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID || !RPC_URL || !NFT_CONTRACT) {
@@ -25,8 +24,9 @@ const nftAbi = [
 const nftContract = new ethers.Contract(NFT_CONTRACT, nftAbi, provider);
 
 const STATE_FILE = "./lastBlock.json";
-const SCAN_INTERVAL = 5000;
+const SCAN_INTERVAL = 30000;
 const BLOCK_CONFIRMATIONS = 3;
+const MAX_BLOCK_RANGE = 10;
 
 function shortAddress(address) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -177,7 +177,7 @@ async function scanNFTPurchases() {
       return;
     }
 
-    const toBlock = safeBlock;
+    const toBlock = Math.min(fromBlock + MAX_BLOCK_RANGE, safeBlock);
 
     if (fromBlock >= toBlock) {
       scanning = false;
@@ -208,6 +208,7 @@ async function startBot() {
   console.log(`🌐 Chain ID: ${network.chainId}`);
   console.log(`🎟 NFT Contract: ${NFT_CONTRACT}`);
   console.log(`⏱ Scan interval: ${SCAN_INTERVAL / 1000}s`);
+  console.log(`📦 Max block range: ${MAX_BLOCK_RANGE}`);
 
   await scanNFTPurchases();
 
